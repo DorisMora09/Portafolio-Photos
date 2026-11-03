@@ -271,6 +271,79 @@
       color: var(--muted);
     }
 
+    /* ---------- Animaciones de aparición ---------- */
+    @keyframes aparecer {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes aparecer-suave {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Al cargar la página: barra, encabezado y filtro entran uno tras otro */
+    .barra {
+      animation: aparecer-suave .8s ease both;
+    }
+
+    header {
+      animation: aparecer 1s ease .2s both;
+    }
+
+    nav {
+      animation: aparecer 1s ease .45s both;
+    }
+
+    /* Fotos y contacto: aparecen al llegar a ellos (el script quita "espera") */
+    .foto,
+    #contacto {
+      transition: opacity .9s ease, transform .9s ease;
+    }
+
+    .espera {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    /* Foto ampliada con entrada suave */
+    #visor.abierto {
+      animation: aparecer-suave .25s ease;
+    }
+
+    /* Respeta a quienes tienen las animaciones desactivadas en su dispositivo */
+    @media (prefers-reduced-motion: reduce) {
+
+      .barra,
+      header,
+      nav,
+      #visor.abierto {
+        animation: none;
+      }
+
+      .foto,
+      #contacto {
+        transition: none;
+      }
+
+      .espera {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
     /* Protección básica: dificulta guardar o arrastrar las fotos */
     .foto img,
     #visor img {
@@ -409,8 +482,36 @@
       if (e.target.closest('.foto, #visor')) e.preventDefault();
     });
     document.addEventListener('dragstart', e => {
-      if (e.target.tagName === 'IMG') e.preventDefault();
-    });
+      if (e.target.tagName === 'IMG') e.preventDefault(); 
+    }); 
+
+    // ---------- Animaciones: aparecer fotos y contacto al llegar a ellos ----------
+    const revelar = new IntersectionObserver((entradas) => {
+      entradas.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.remove('espera');
+          revelar.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    function preparar(el, retraso = 0) {
+      el.style.transitionDelay = retraso + 's';
+      el.classList.add('espera');
+      revelar.observe(el);
+    }
+
+    // Las fotos entran escalonadas (una tras otra)
+    fotos.forEach((f, i) => preparar(f, (i % 6) * 0.08));
+    preparar(document.getElementById('contacto'));
+
+    // Al cambiar de categoría, las fotos visibles vuelven a aparecer suavemente
+    botones.forEach(b => b.addEventListener('click', () => {
+      let n = 0;
+      fotos.forEach(f => {
+        if (!f.classList.contains('oculta')) preparar(f, (n++ % 6) * 0.08);
+      });
+    }));
   </script>
 </body>
 
