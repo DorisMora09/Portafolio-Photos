@@ -5,12 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Portafolio de fotografía</title>
-  <style>
+<style>
     :root {
       --bg: #f2f0ec;
       --ink: #1d1d1b;
       --muted: #6d6a64;
       --line: #d8d4cc;
+
+      /* Fondo con imagen: cambia estos 3 valores a tu gusto */
+      --fondo-imagen: url("Photos/fondo.jpg");
+      --fondo-opacidad: 0.8;    /* 0 = invisible, 1 = completa (más alto = menos oscuro) */
+      --fondo-desenfoque: 10px; /* más alto = más borroso */
     }
 
     @media (prefers-color-scheme: dark) {
@@ -34,14 +39,141 @@
       line-height: 1.6;
     }
 
+    /* Imagen de fondo translúcida (queda detrás de todo) */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -3rem; /* sobresale para que el desenfoque no deje bordes oscuros */
+      z-index: -1;
+      background: var(--fondo-imagen) center / cover no-repeat;
+      opacity: var(--fondo-opacidad);
+      filter: blur(var(--fondo-desenfoque));
+    }
+
     a {
       color: inherit;
     }
 
+    /* Header en recuadro sólido, del mismo color que la barra */
     header {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 4rem 1.5rem 2rem;
+      width: min(1100px, calc(100% - 2rem));
+      margin: 1.5rem auto;
+      padding: 3rem 1.5rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    /* Foto de perfil con marco de lente: la foto se ve por la abertura */
+    .perfil {
+      --perfil-zoom: 1;
+      /* sube a 1.2 o 1.3 para acercar la cara */
+      position: relative;
+      flex: none;
+      width: clamp(130px, 22vw, 190px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--line);
+      /* color que se ve mientras no hay foto */
+    }
+
+    .perfil img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+
+    .perfil-foto {
+      object-fit: cover;
+      transform: scale(var(--perfil-zoom));
+    }
+
+    /* Obturador: 6 hojas que giran sobre un punto del borde, como un diafragma */
+    .obturador {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .hoja {
+      fill: var(--ink);
+      transform-box: view-box;
+      /* Estado final = abierto (también se ve así si se desactivan las animaciones) */
+      transform: rotate(45deg);
+      /* abre → cierra → abre y se queda abierto. Cambia 3.2s para ir más rápido o lento */
+      animation: obturador 3.2s ease-in-out .3s both;
+    }
+
+    @keyframes obturador {
+      0% {
+        transform: rotate(-32deg);
+      }
+
+      /* cerrado */
+      30% {
+        transform: rotate(45deg);
+      }
+
+      /* abre */
+      48% {
+        transform: rotate(-32deg);
+      }
+
+      /* cierra (el "clic") */
+      60% {
+        transform: rotate(-32deg);
+      }
+
+      /* pausa cerrado */
+      100% {
+        transform: rotate(45deg);
+      }
+
+      /* abre y queda abierto */
+    }
+
+    /* Versión corta para cuando pasas el cursor: abierto → cierra → abre */
+    @keyframes disparo {
+      0% {
+        transform: rotate(45deg);
+      }
+
+      40% {
+        transform: rotate(-32deg);
+      }
+
+      55% {
+        transform: rotate(-32deg);
+      }
+
+      100% {
+        transform: rotate(45deg);
+      }
+    }
+
+    /* Anillo del lente alrededor de la foto */
+    .perfil {
+      box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--ink);
+    }
+
+    @media (max-width: 600px) {
+
+      /* En celular la foto pasa arriba del texto */
+      header {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+      }
     }
 
     h1 {
@@ -57,12 +189,19 @@
       color: var(--muted);
     }
 
+    /* Filtro de categorías: parte superior del panel sólido (nav + galería) */
     nav {
-      max-width: 1100px;
+      width: min(1100px, calc(100% - 2rem));
       margin: 0 auto;
-      padding: 0 1.5rem 1.5rem;
+      padding: .9rem 1.5rem;
       display: flex;
-      gap: 1.25rem;
+      flex-wrap: wrap;
+      gap: .5rem 1.5rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      /* separador traslúcido entre el filtro y las fotos */
+      border-bottom-color: color-mix(in srgb, var(--ink) 15%, transparent);
+      border-radius: 12px 12px 0 0;
       font-family: system-ui, sans-serif;
       font-size: .95rem;
     }
@@ -92,12 +231,18 @@
       outline-offset: 3px;
     }
 
+    /* Galería: parte inferior del panel sólido, el margen de abajo deja ver el fondo */
     main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 1.5rem 3rem;
+      width: min(1100px, calc(100% - 2rem));
+      margin: 0 auto 1.5rem;
+      padding: 1.5rem 1.5rem .5rem;
       columns: 3 280px;
       column-gap: 1rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 12px 12px;
+      animation: aparecer 1s ease .45s both;
     }
 
     .foto {
@@ -146,6 +291,7 @@
       scroll-behavior: smooth;
     }
 
+    /* Barra superior de color sólido */
     .barra {
       position: sticky;
       top: 0;
@@ -189,11 +335,16 @@
       color: var(--ink);
     }
 
+    /* Contacto como panel semitransparente para que se lea sobre la imagen */
     #contacto {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem 4rem;
-      border-top: 1px solid var(--line);
+      width: min(1100px, calc(100% - 2rem));
+      margin: 0 auto 2rem;
+      padding: 3rem 1.5rem 3.5rem;
+      background: color-mix(in srgb, var(--bg) 78%, transparent);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: 12px;
       scroll-margin-top: 4rem;
     }
 
@@ -239,6 +390,147 @@
       color: var(--muted);
     }
 
+    /* ---------- Flechas del visor de fotos ---------- */
+    .flecha {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0 .25rem;
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .45);
+      color: #fff;
+      font: 2rem/1 system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .flecha:hover {
+      background: rgba(255, 255, 255, .22);
+    }
+
+    .flecha:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    .flecha[hidden] {
+      display: none;
+    }
+
+    .flecha.anterior {
+      left: 1rem;
+    }
+
+    .flecha.siguiente {
+      right: 1rem;
+    }
+
+    .contador {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      opacity: .8;
+      font: .9rem system-ui, sans-serif;
+    }
+
+    @media (max-width: 600px) {
+      .flecha {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.6rem;
+      }
+
+      .flecha.anterior {
+        left: .5rem;
+      }
+
+      .flecha.siguiente {
+        right: .5rem;
+      }
+    }
+
+    /* ---------- Animaciones de aparición ---------- */
+    @keyframes aparecer {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes aparecer-suave {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Al cargar la página: barra, encabezado y filtro entran uno tras otro */
+    .barra {
+      animation: aparecer-suave .8s ease both;
+    }
+
+    header {
+      animation: aparecer 1s ease .2s both;
+    }
+
+    nav {
+      animation: aparecer 1s ease .45s both;
+    }
+
+    /* Fotos y contacto: aparecen al llegar a ellos (el script quita "espera") */
+    .foto,
+    #contacto {
+      transition: opacity .9s ease, transform .9s ease;
+    }
+
+    .espera {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    /* Foto ampliada con entrada suave */
+    #visor.abierto {
+      animation: aparecer-suave .25s ease;
+    }
+
+    /* Respeta a quienes tienen las animaciones desactivadas en su dispositivo */
+    @media (prefers-reduced-motion: reduce) {
+
+      .barra,
+      header,
+      nav,
+      main,
+      .hoja,
+      #visor.abierto {
+        animation: none;
+      }
+
+      .foto,
+      #contacto {
+        transition: none;
+      }
+
+      .espera {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
     /* Protección básica: dificulta guardar o arrastrar las fotos */
     .foto img,
     #visor img {
@@ -264,9 +556,26 @@
     </div>
   </div>
 
-  <header>
-    <h1>Doris Mora,<br>fotógrafo</h1>
-    <p>Retratos, paisajes y vida urbana. Una selección de mi trabajo reciente.</p>
+<header>
+    <div class="header-texto">
+      <h1>Doris Mora,<br>fotógrafo</h1>
+      <p>Retratos, paisajes y vida urbana. Una selección de mi trabajo reciente.</p>
+    </div>
+
+    <!-- Foto de perfil: la foto va detrás y el obturador (6 hojas) encima.
+         Ya no necesitas lente.png: las hojas están dibujadas aquí mismo. -->
+    <div class="perfil">
+      <img class="perfil-foto" src="Photos/perfil.jpg" alt="Foto de perfil de Doris Mora"
+        onerror="this.style.display='none'">
+      <svg class="obturador" viewBox="0 0 512 512" aria-hidden="true">
+        <path class="hoja" style="transform-origin: 272px 14px" d="M268 2 263 0 240 0 239 1 229 1 228 2 214 3 213 4 209 4 208 5 204 5 203 6 199 6 198 7 187 9 158 19 135 30 109 46 85 65 66 84 64 91 68 100 81 121 107 168 112 175 134 215 140 222 146 223 151 221 154 218 156 213 161 206 167 194 172 187 178 175 183 168 189 156 194 149 196 144 201 137 207 125 212 118 218 106 223 99 229 87 234 80 236 75 241 68 247 56 272 14 272 7Z"/>
+        <path class="hoja" style="transform-origin: 475px 148px" d="M227 136 228 143 234 148 475 148 479 145 481 141 481 135 478 129 458 99 435 73 412 53 382 33 358 21 331 11 328 11 324 9 321 9 312 6 305 6 303 7 297 14 291 26 286 33 280 45 275 52 273 57 257 83 255 88 253 90 251 95 246 102Z"/>
+        <path class="hoja" style="transform-origin: 53px 119px" d="M40 119 35 126 23 149 23 151 20 156 15 171 13 174 6 199 6 203 5 204 5 208 3 214 3 220 2 221 2 228 1 229 1 240 0 241 0 270 1 271 1 282 2 283 2 290 3 291 3 297 4 298 5 308 13 336 18 340 167 340 169 339 173 334 173 326 171 324 153 291 148 284 146 279 144 277 122 237 117 230 95 190 90 183 57 124 53 119 49 117 44 117Z"/>
+        <path class="hoja" style="transform-origin: 462px 392px" d="M344 171 340 174 338 178 338 184 344 195 349 202 351 207 356 214 358 219 363 226 365 231 370 238 372 243 377 250 379 255 384 262 390 274 395 281 397 286 402 293 404 298 409 305 411 310 416 317 418 322 423 329 425 334 430 341 432 346 437 353 456 387 462 392 469 392 474 388 479 378 481 376 495 345 502 324 502 321 505 312 505 308 506 307 506 303 507 302 507 298 508 297 508 291 509 290 510 271 511 270 511 241 510 240 510 229 509 228 507 208 506 207 505 199 498 175 493 171Z"/>
+        <path class="hoja" style="transform-origin: 239px 497px" d="M373 289 366 287 365 288 362 288 357 293 351 305 346 312 322 355 310 374 282 424 277 431 253 474 239 497 239 504 243 509 248 511 270 511 271 510 282 510 283 509 297 508 298 507 302 507 303 506 307 506 308 505 312 505 313 504 324 502 353 492 378 480 402 465 426 446 446 426 448 421 448 417 415 361 413 356 408 349 406 344 401 337 399 332 394 325 381 301Z"/>
+        <path class="hoja" style="transform-origin: 36px 363px" d="M30 370 30 376 33 382 53 412 75 437 94 454 119 472 151 489 153 489 163 494 171 496 174 498 199 505 206 505 208 504 214 497 220 485 225 478 231 466 236 459 238 454 254 428 256 423 258 421 260 416 265 409 284 375 283 368 277 363 36 363 32 366Z"/>
+      </svg>
+    </div>
   </header>
 
   <nav aria-label="Filtrar por categoría">
@@ -347,7 +656,7 @@
 
   <p class="copy">© 2026 Doris Mora. Todos los derechos reservados.</p>
 
-  <script>
+<script>
     const botones = document.querySelectorAll('nav button');
     const fotos = document.querySelectorAll('.foto');
     const visor = document.getElementById('visor');
@@ -362,15 +671,161 @@
       });
     }));
 
-    // Ampliar foto
-    fotos.forEach(f => f.addEventListener('click', () => {
-      const img = f.querySelector('img');
-      visorImg.src = img.src;
+    // ---------- Ampliar foto con flechas ----------
+    // El script trae sus propios estilos, así que no necesitas tocar tu <style>
+    const estiloVisor = document.createElement('style');
+    estiloVisor.textContent = `
+      /* Deja espacio a los lados para las flechas y abajo para el número */
+      #visor { padding: 1.5rem 5.5rem 4rem; }
+      #visor img { transition: opacity .25s ease; }
+
+      .visor-flecha {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        color: #fff;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .3);
+        border-radius: 50%;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
+      }
+      .visor-flecha[hidden] { display: none; }
+      .visor-flecha.atras { left: 1.5rem; }
+      .visor-flecha.adelante { right: 1.5rem; }
+      .visor-flecha:hover {
+        background: rgba(255, 255, 255, .28);
+        transform: translateY(-50%) scale(1.08);
+      }
+      .visor-flecha:active { transform: translateY(-50%) scale(.95); }
+      .visor-flecha:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+      .visor-contador {
+        position: absolute;
+        bottom: 1.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: .35rem 1rem;
+        color: #fff;
+        background: rgba(0, 0, 0, .5);
+        border-radius: 999px;
+        font: .9rem/1.4 system-ui, sans-serif;
+        letter-spacing: .08em;
+      }
+
+      @media (max-width: 600px) {
+        #visor { padding: 1rem .5rem 4rem; }
+        .visor-flecha { width: 44px; height: 44px; }
+        .visor-flecha.atras { left: .5rem; }
+        .visor-flecha.adelante { right: .5rem; }
+      }
+    `;
+    document.head.appendChild(estiloVisor);
+
+    const icono = d => `<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.className = 'visor-flecha atras';
+    btnAnterior.setAttribute('aria-label', 'Foto anterior');
+    btnAnterior.innerHTML = icono('M15 5l-7 7 7 7');
+
+    const btnSiguiente = document.createElement('button');
+    btnSiguiente.className = 'visor-flecha adelante';
+    btnSiguiente.setAttribute('aria-label', 'Foto siguiente');
+    btnSiguiente.innerHTML = icono('M9 5l7 7-7 7');
+
+    const contador = document.createElement('div');
+    contador.className = 'visor-contador';
+
+    visor.append(btnAnterior, btnSiguiente, contador);
+
+    // Pega las flechas a los lados de la foto, sea cual sea su tamaño
+    const SEPARACION = 14; // píxeles entre la foto y cada flecha (cámbialo a gusto)
+    function colocarFlechas() {
+      const r = visorImg.getBoundingClientRect();
+      if (!r.width) return;
+      const w = btnAnterior.offsetWidth || 56;
+      const margen = 8;
+      const y = r.top + r.height / 2;
+      // En pantallas angostas se quedan dentro de la pantalla, sobre el borde de la foto
+      const izq = Math.max(margen, r.left - w - SEPARACION);
+      const der = Math.min(window.innerWidth - w - margen, r.right + SEPARACION);
+      Object.assign(btnAnterior.style, { left: izq + 'px', right: 'auto', top: y + 'px' });
+      Object.assign(btnSiguiente.style, { left: der + 'px', right: 'auto', top: y + 'px' });
+    }
+    window.addEventListener('resize', () => {
+      if (visor.classList.contains('abierto')) colocarFlechas();
+    });
+
+    let actual = 0;
+    // Solo las fotos de la categoría que se está viendo
+    const visibles = () => [...fotos].filter(f => !f.classList.contains('oculta'));
+
+    function mostrar(i) {
+      const lista = visibles();
+      if (!lista.length) return;
+      const n = lista.length;
+      actual = (i + n) % n; // al llegar al final vuelve al inicio
+      const img = lista[actual].querySelector('img');
+
+      // Cambio con fundido suave
+      if (visorImg.src !== img.src) {
+        visorImg.style.opacity = 0;
+        visorImg.onload = visorImg.onerror = () => {
+          visorImg.style.opacity = 1;
+          colocarFlechas();
+        };
+        visorImg.src = img.src;
+      } else {
+        visorImg.style.opacity = 1;
+      }
       visorImg.alt = img.alt;
+
+      contador.textContent = (actual + 1) + ' / ' + n;
+      btnAnterior.hidden = btnSiguiente.hidden = n < 2;
       visor.classList.add('abierto');
-    }));
+      colocarFlechas();
+
+      // Precarga la anterior y la siguiente para que cambien al instante
+      [lista[(actual + 1) % n], lista[(actual - 1 + n) % n]].forEach(f => {
+        new Image().src = f.querySelector('img').src;
+      });
+    }
+
+    fotos.forEach(f => f.addEventListener('click', () => mostrar(visibles().indexOf(f))));
+
+    btnAnterior.addEventListener('click', e => { e.stopPropagation(); mostrar(actual - 1); });
+    btnSiguiente.addEventListener('click', e => { e.stopPropagation(); mostrar(actual + 1); });
+
+    // Cerrar al hacer clic fuera de las flechas
     visor.addEventListener('click', () => visor.classList.remove('abierto'));
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') visor.classList.remove('abierto'); });
+
+    // Teclado: Esc cierra, flechas navegan
+    document.addEventListener('keydown', e => {
+      if (!visor.classList.contains('abierto')) return;
+      if (e.key === 'Escape') visor.classList.remove('abierto');
+      if (e.key === 'ArrowRight') mostrar(actual + 1);
+      if (e.key === 'ArrowLeft') mostrar(actual - 1);
+    });
+
+    // Celular: deslizar el dedo a izquierda o derecha
+    let inicioX = null;
+    visor.addEventListener('touchstart', e => { inicioX = e.touches[0].clientX; }, { passive: true });
+    visor.addEventListener('touchend', e => {
+      if (inicioX === null) return;
+      const dx = e.changedTouches[0].clientX - inicioX;
+      inicioX = null;
+      if (Math.abs(dx) > 50) mostrar(actual + (dx < 0 ? 1 : -1));
+    }, { passive: true });
 
     // Protección básica: bloquear clic derecho y arrastre sobre las fotos
     document.addEventListener('contextmenu', e => {
@@ -379,6 +834,57 @@
     document.addEventListener('dragstart', e => {
       if (e.target.tagName === 'IMG') e.preventDefault();
     });
+
+    // ---------- Animaciones: aparecer fotos y contacto al llegar a ellos ----------
+    const revelar = new IntersectionObserver((entradas) => {
+      entradas.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.remove('espera');
+          revelar.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    function preparar(el, retraso = 0) {
+      el.style.transitionDelay = retraso + 's';
+      el.classList.add('espera');
+      revelar.observe(el);
+    }
+
+    // Las fotos entran escalonadas (una tras otra)
+    fotos.forEach((f, i) => preparar(f, (i % 6) * 0.08));
+    preparar(document.getElementById('contacto'));
+
+    // Al cambiar de categoría, las fotos visibles vuelven a aparecer suavemente
+    botones.forEach(b => b.addEventListener('click', () => {
+      let n = 0;
+      fotos.forEach(f => {
+        if (!f.classList.contains('oculta')) preparar(f, (n++ % 6) * 0.08);
+      });
+    }));
+
+    // ---------- Obturador de la foto de perfil: se dispara al pasar el cursor ----------
+    const perfil = document.querySelector('.perfil');
+    const hojas = perfil ? perfil.querySelectorAll('.hoja') : [];
+    const menosMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let enCurso = false;
+
+    function disparar() {
+      if (enCurso || !hojas.length || menosMovimiento.matches) return;
+      enCurso = true;
+      hojas.forEach(h => { h.style.animation = 'disparo 1.1s ease-in-out both'; });
+    }
+
+    if (hojas.length) {
+      // Al terminar, se limpia para poder repetirlo (la hoja queda abierta)
+      hojas[0].addEventListener('animationend', e => {
+        if (e.animationName !== 'disparo') return;
+        hojas.forEach(h => { h.style.animation = 'none'; });
+        enCurso = false;
+      });
+      perfil.addEventListener('mouseenter', disparar);
+      perfil.addEventListener('click', disparar); // en celular, al tocar la foto
+    }
   </script>
 </body>
 
